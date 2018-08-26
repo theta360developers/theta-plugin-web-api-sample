@@ -1,4 +1,4 @@
-# RICOH THETA Plug-in SDK
+# THETA Plug-in: WebAPI Capture Plugin
 
 Version: 1.0.0
 
@@ -10,7 +10,6 @@ Version: 1.0.0
 * [Contents of the SDK](#contents)
 * [Getting Started](#started)
 * [Where to find the latest information](#information)
-* [Troubleshooting](#troubleshooting)
 * [Trademark Information](#trademark)
 
 <a name="terms"></a>
@@ -51,13 +50,13 @@ The SDK was tested with a RICOH THETA V under the following conditions.
 
 #### Firmware
 
-* ver.2.30.1 and above
+* ver.2.40.2 and above
 
-    > Information on checking and updating the firmware is [here](https://theta360.com/en/support/manual/v/content/pc/pc_09.html).
+    Information on checking and updating the firmware is [here](https://theta360.com/en/support/manual/v/content/pc/pc_09.html).
 
 ### Development Environment
 
-This SDK has been confirmed to operate under the following conditions.
+* This SDK has been confirmed to operate under the following conditions.
 
 #### Operating System
 
@@ -67,7 +66,7 @@ This SDK has been confirmed to operate under the following conditions.
 #### Development environment
 
 * Android&trade; Studio 3.1+
-* gradle 3.1.3
+* gradle 3.1.4
 * Android&trade; SDK (API Level 25)
 * compileSdkVersion 26
 * buildToolsVersion "27.0.3"
@@ -75,49 +74,24 @@ This SDK has been confirmed to operate under the following conditions.
 * targetSdkVersion 25
 
 <a name="contents"></a>
-## Contents of the SDK
+## Contents of this plug-in
 
-* This SDK is a Plug-in sample project of Android&trade; Studio.
-* This SDK implements the basic parts necessary for developing plug-ins. You can create your own development project based on this project.
-* This SDK includes a plug-in library ([pluginlibrary](pluginlibrary)) to support plug-in development of RICOH THETA. The plug-in library is the main part of the SDK, with its own part of the RICOH THETA plug-in being consolidated.
-* The plug-in library implements the following functions that a standard plug-in should implement.
-    * Get button operation event
-    * Plug-in termination processing
-    * LED control
-    * Control of speaker
+* This plugin is a simple camera capturing sample.
+* This plugin is forked from [Plugin SDK](https://github.com/ricohapi/theta-plugin-sdk).
+* This plugin can capture still and video, switch WLAN.
 
 <a name="started"></a>
 ## Getting Started
 
-1. Import plug-in sdk as a project into Android&trade; Studio.
-1. Please rewrite the sample program in app accordingly and create a program.
-
-    * By inheriting `PluginActivity` you will be able to use library methods.
-
-        ```java
-        public class MainActivity extends PluginActivity {
-            @Override
-            protected void onCreate (Bundle savedInstanceState) {
-                super.onCreate (savedInstanceState);
-                setContentView (R.layout.activity_main);
-        ```
-
-    * Please refer to [the web SDK document](https://api.ricoh/docs/theta-plugin/) for development precautions.
-
-1. Please connect RICOH THETA V with USB.
-1. By running it, installing and debuging is possible.
-1. To build for distribution, build *apk* with *Build APK (s)* in the Build menu.
+1. Open the project in Android&trade; Studio.
+1. Connect RICOH THETA V with USB.
+1. Build and Run on THETA V.
 
 <a name="information"></a>
-## Where to find the latest information
+## Where to find the latest SDK information
 
 * The latest information is published on [the WEB site](https://api.ricoh/docs/theta-plugin/).
 * The latest SDK is released on [the GitHub project](https://github.com/ricohapi/theta-plugin-sdk).
-
-<a name="troubleshooting"></a>
-## Troubleshooting
-
-If you have a request, create an issue on [the GitHub project](https://github.com/ricohapi/theta-plugin-sdk/issues).
 
 <a name="trademark"></a>
 ## Trademark Information

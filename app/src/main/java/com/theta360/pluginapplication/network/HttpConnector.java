@@ -18,6 +18,8 @@ package com.theta360.pluginapplication.network;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
+
 import com.theta360.pluginapplication.model.ImageSize;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -30,6 +32,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.json.JSONArray;
@@ -398,6 +401,111 @@ public class HttpConnector {
         return result;
     }
 
+
+    public ShootResult startCapture() {
+        ShootResult result = ShootResult.FAIL_DEVICE_BUSY;
+
+        // set capture mode to image
+        String errorMessage = setCaptureMode("video");
+        if (errorMessage == "Error") {
+            result = ShootResult.FAIL_DEVICE_BUSY;
+            return result;
+        }
+
+        HttpURLConnection postConnection = createHttpConnection("POST", "/osc/commands/execute");
+        JSONObject input = new JSONObject();
+        String responseData;
+        InputStream is = null;
+
+        try {
+            // send HTTP POST
+            input.put("name", "camera.startCapture");
+
+            OutputStream os = postConnection.getOutputStream();
+            os.write(input.toString().getBytes());
+            postConnection.connect();
+            os.flush();
+            os.close();
+
+            is = postConnection.getInputStream();
+            responseData = InputStreamToString(is);
+
+            // parse JSON data
+            JSONObject output = new JSONObject(responseData);
+            String status = output.getString("state");
+            String commandId = output.getString("id");
+
+            Log.d("HttpConnector::startCapture()", "status: "+status+", id: "+commandId );
+
+            result = ShootResult.SUCCESS;
+        } catch (IOException e) {
+            e.printStackTrace();
+            result = ShootResult.FAIL_DEVICE_BUSY;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            result = ShootResult.FAIL_DEVICE_BUSY;
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public ShootResult stopCapture() {
+        ShootResult result = ShootResult.FAIL_DEVICE_BUSY;
+
+        // set capture mode to image
+        HttpURLConnection postConnection = createHttpConnection("POST", "/osc/commands/execute");
+        JSONObject input = new JSONObject();
+        String responseData;
+        InputStream is = null;
+
+        try {
+            // send HTTP POST
+            input.put("name", "camera.stopCapture");
+
+            OutputStream os = postConnection.getOutputStream();
+            os.write(input.toString().getBytes());
+            postConnection.connect();
+            os.flush();
+            os.close();
+
+            is = postConnection.getInputStream();
+            responseData = InputStreamToString(is);
+
+            // parse JSON data
+            JSONObject output = new JSONObject(responseData);
+            String status = output.getString("state");
+            String commandId = output.getString("id");
+
+            Log.d("HttpConnector::stopCapture()", "status: "+status+", id: "+commandId );
+
+            result = ShootResult.SUCCESS;
+        } catch (IOException e) {
+            e.printStackTrace();
+            result = ShootResult.FAIL_DEVICE_BUSY;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            result = ShootResult.FAIL_DEVICE_BUSY;
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return result;
+    }
+
     /**
      * Check still image shooting status
      *
@@ -697,6 +805,63 @@ public class HttpConnector {
         return imageSize;
     }
 
+    public JSONObject getOptions(List<String> optionList) {
+
+        // set capture mode to image
+        setImageCaptureMode();
+
+        HttpURLConnection postConnection = createHttpConnection("POST", "/osc/commands/execute");
+        JSONObject input = new JSONObject();
+        String responseData;
+        JSONObject options = null;
+        InputStream is = null;
+
+        try {
+            // send HTTP POST
+            input.put("name", "camera.getOptions");
+            JSONObject parameters = new JSONObject();
+            JSONArray optionNames = new JSONArray();
+            for (String option : optionList) {
+                Log.d("debug", "HttpConnector::getOptions(): "+option);
+                optionNames.put(option);
+            }
+            parameters.put("optionNames", optionNames);
+            input.put("parameters", parameters);
+
+            OutputStream os = postConnection.getOutputStream();
+            os.write(input.toString().getBytes());
+            postConnection.connect();
+            os.flush();
+            os.close();
+
+            is = postConnection.getInputStream();
+            responseData = InputStreamToString(is);
+
+            // parse JSON data
+            JSONObject output = new JSONObject(responseData);
+            String status = output.getString("state");
+
+            if (status.equals("done")) {
+                JSONObject results = output.getJSONObject("results");
+                options = results.getJSONObject("options");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return options;
+    }
+
     /**
      * Specify shooting size
      *
@@ -767,6 +932,9 @@ public class HttpConnector {
      * @return Error message (null is returned if successful)
      */
     private String setImageCaptureMode() {
+        return setCaptureMode("image");
+    }
+    public String setCaptureMode(String mode) {
         HttpURLConnection postConnection = createHttpConnection("POST", "/osc/commands/execute");
         JSONObject input = new JSONObject();
         String responseData;
@@ -778,7 +946,10 @@ public class HttpConnector {
             input.put("name", "camera.setOptions");
             JSONObject parameters = new JSONObject();
             JSONObject options = new JSONObject();
-            options.put("captureMode", "image");
+            if(mode.isEmpty()){
+                mode = "image";
+            }
+            options.put("captureMode", mode);
             parameters.put("options", options);
             input.put("parameters", parameters);
 
@@ -839,6 +1010,59 @@ public class HttpConnector {
         return errorMessage;
     }
 
+
+    public String getCaptureMode() {
+
+        HttpURLConnection postConnection = createHttpConnection("POST", "/osc/commands/execute");
+        JSONObject input = new JSONObject();
+        String responseData;
+        InputStream is = null;
+        String captureMode="Error";
+
+        try {
+            // send HTTP POST
+            input.put("name", "camera.getOptions");
+            JSONObject parameters = new JSONObject();
+            JSONArray optionNames = new JSONArray();
+            optionNames.put("captureMode");
+            parameters.put("optionNames", optionNames);
+            input.put("parameters", parameters);
+
+            OutputStream os = postConnection.getOutputStream();
+            os.write(input.toString().getBytes());
+            postConnection.connect();
+            os.flush();
+            os.close();
+
+            is = postConnection.getInputStream();
+            responseData = InputStreamToString(is);
+
+            // parse JSON data
+            JSONObject output = new JSONObject(responseData);
+            String status = output.getString("state");
+
+            if (status.equals("done")) {
+                JSONObject results = output.getJSONObject("results");
+                JSONObject options = results.getJSONObject("options");
+                captureMode = options.getString("captureMode");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return captureMode;
+    }
+
     /**
      * Acquire device status
      *
@@ -877,6 +1101,40 @@ public class HttpConnector {
         }
 
         return lastFile;
+    }
+    public JSONObject getStatus() {
+        HttpURLConnection postConnection = createHttpConnection("POST", "/osc/state");
+        String responseData;
+        String lastFile = "";
+        InputStream is = null;
+        JSONObject status = null;
+
+        try {
+            // send HTTP POST
+            postConnection.connect();
+
+            is = postConnection.getInputStream();
+            responseData = InputStreamToString(is);
+
+            // parse JSON data
+            JSONObject output = new JSONObject(responseData);
+            mFingerPrint = output.getString("fingerprint");
+            status = output.getJSONObject("state");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return status;
     }
 
     /**

@@ -73,5 +73,4 @@ public class TakePictureTask extends AsyncTask<Void, Void, HttpConnector.ShootRe
     public interface Callback {
         void onTakePicture(String fileUrl);
     }
-
 }
